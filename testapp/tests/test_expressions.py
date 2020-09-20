@@ -1,9 +1,10 @@
 from unittest import skipUnless
 
 from django import VERSION
-from django.db.models import IntegerField
+from django.db.models import IntegerField, CharField
 from django.db.models.expressions import Case, Exists, OuterRef, Subquery, Value, When
 from django.test import TestCase
+from django.db.models.functions import Concat
 
 from ..models import Author, Comment, Post
 
@@ -31,6 +32,16 @@ class TestExists(TestCase):
         Post.objects.annotate(
             post_exists=Exists(Post.objects.all())
         ).filter(post_exists=True).count()
+
+    def test_simple_concat_with_count(self):
+        Post.objects.annotate(
+            display_name=Concat('title', Value(' test'))
+        ).count()
+
+    def test_concat_with_count(self):
+        Post.objects.annotate(
+            display_name=Concat('title', Value(', '), 'author', output_field=CharField())
+        ).count()
 
     @skipUnless(DJANGO3, "Django 3 specific tests")
     def test_with_case_when(self):
